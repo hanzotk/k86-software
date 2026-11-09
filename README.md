@@ -3,7 +3,7 @@
 Controle da iluminação, das laterais e da tela do teclado **Attack Shark K86**, direto pelo navegador.
 Não precisa instalar nada: o site fala com o teclado pela WebHID do Chrome e do Edge.
 
-**Abrir:** https://hanzotk.github.io/k86-rgb/
+**Abrir:** https://hanzotk.github.io/k86-software/
 
 ## Como usar
 1. Ligue o K86 pelo cabo USB e feche o software oficial (inclusive na bandeja do relógio).
