@@ -150,6 +150,11 @@ button{cursor:pointer}
 .fx canvas{width:64px;height:8px;border-radius:3px;background:#2a2d33;image-rendering:pixelated}
 .fx-group{grid-column:1/-1;font-size:12.5px;color:var(--soft);padding:10px 2px 2px}
 .fx-group:first-child{padding-top:0}
+.fx-cat{grid-column:1/-1;display:flex;flex-direction:column;gap:1px;padding:0 2px 8px}
+.fx-cat b{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.fx-cat span{font-size:12.5px;color:var(--soft)}
+.fx-cat.exp{margin-top:18px;padding-top:16px;border-top:1px dashed var(--line2)}
+.fx-cat.exp b::after{content:"Beta";font-size:11px;font-weight:600;padding:1px 7px;border-radius:99px;border:1px solid var(--line2);color:var(--graphite)}
 
 /* cores */
 .swatches{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
@@ -163,6 +168,16 @@ button{cursor:pointer}
 .pick.on::after{content:"";position:absolute;inset:7px;border-radius:50%;background:var(--s);box-shadow:0 0 0 2px #fff}
 
 /* seletor de cor próprio */
+.aur-cores{display:flex;align-items:center;gap:8px;margin-top:12px}
+.aur-c{flex:1;display:flex;align-items:center;gap:10px;min-width:0;border:1px solid var(--line2);background:var(--sheet);border-radius:var(--r-sm);padding:8px 10px;text-align:left;
+  transition:background .15s,border-color .15s}
+.aur-c:hover{background:var(--raised);border-color:var(--soft)}
+.aur-c i{flex:none;width:26px;height:26px;border-radius:50%;background:var(--s);box-shadow:0 0 0 1px #0002 inset,0 0 12px -2px var(--s)}
+.aur-c span{display:flex;flex-direction:column;min-width:0;line-height:1.25}
+.aur-c b{font-size:13.5px;font-weight:600}
+.aur-c small{font-size:12px;color:var(--soft);letter-spacing:.03em}
+.aur-troca{flex:none;width:36px;height:36px;border-radius:50%;border:1px solid var(--line2);background:var(--sheet);display:grid;place-items:center;color:var(--graphite)}
+.aur-troca:hover{background:var(--raised);color:var(--ink)}
 .cp-fundo{position:fixed;inset:0;z-index:20;background:#0000;transition:background .2s}
 .cp-fundo.aberto{background:#0003}
 .cp{position:fixed;z-index:21;width:300px;background:var(--sheet);color:var(--ink);border:1px solid var(--line2);border-radius:18px;
@@ -321,18 +336,24 @@ input[type=range]:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
   <!-- Iluminação -->
   <section class="panel" id="p-teclado">
     <div class="col">
-      <div class="h"><h2>Efeito</h2><span>Roda dentro do teclado</span></div>
+      <div class="h"><h2>Efeito</h2></div>
       <div class="fx" id="fx"></div>
     </div>
     <div class="col">
       <div class="block" id="t-aur" hidden>
         <div class="h"><h2>Paleta</h2><span>Experimental</span></div>
         <div class="seg" id="aur-pal"></div>
+        <div class="aur-cores" id="aur-cores" hidden>
+          <button class="aur-c" data-n="1"><i></i><span><b>Cor 1</b><small></small></span></button>
+          <button class="aur-c" data-n="2"><i></i><span><b>Cor 2</b><small></small></span></button>
+          <button class="aur-troca" id="aur-troca" title="Trocar as cores de lugar" aria-label="Trocar as cores de lugar">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3"/><path d="M17 17H6l3 3"/></svg></button>
+        </div>
         <div class="row-actions">
           <button class="btn ink" id="aur-anim">Gravar animação no teclado</button>
           <button class="btn" id="aur-fixa">Gravar como desenho fixo</button>
         </div>
-        <p class="hint" id="aur-status">A animação fica gravada no teclado e roda sozinha. Se o teclado não mudar, o firmware dele não aceita animações; nesse caso use "Gravar como desenho fixo".</p>
+        <p class="hint" id="aur-status">A animação é gravada no teclado e roda sozinha, mesmo com o site fechado.</p>
       </div>
       <div class="block" id="t-cor">
         <div class="h"><h2>Cor</h2></div>
@@ -418,7 +439,7 @@ input[type=range]:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
     <div class="col">
       <div class="h"><h2>Animação</h2></div>
       <div class="range-row"><span>Intervalo entre quadros</span><span id="tint-t"></span></div>
-      <input type="range" id="tint" min="10" max="255" step="5" value="50">
+      <input type="range" id="tint" min="20" max="1000" step="10" value="100">
       <div class="status-line" id="tinfo">Escolha um arquivo para ver a prévia.</div>
       <div class="progress" id="prog" hidden><i id="progbar"></i></div>
       <div class="row-actions">
@@ -444,13 +465,19 @@ const EFEITOS_DEMO = [
   ["convergir","Convergir",1,1,[]],["senoide","Senoide",1,1,[]],["caleidoscopio","Caleidoscópio",1,1,["Para fora","Para dentro"]],
   ["linha","Linha em onda",1,1,["Direita","Esquerda"]],["laser","Laser",1,1,[]],["circulo","Onda circular",1,1,["Anti-horário","Horário"]],
   ["brilhante","Cintilante",1,1,[]],["chuva","Chuva",1,1,[]],["meteoro","Meteoro",1,1,[]],
-  ["aurora","Aurora",0,1,[]],
+  ["aurora","Aurora",0,1,[]],["plasma","Plasma",0,1,[]],["fogo","Fogo",0,1,[]],["mare","Maré",0,1,[]],
+  ["tempestade","Tempestade",0,1,[]],["digital","Chuva digital",0,1,[]],["scanner","Scanner",0,1,[]],["radar","Radar",0,1,[]],
+  ["batimento","Batimento",0,1,[]],["galaxia","Galáxia",0,1,[]],["diagonal","Arco-íris diagonal",0,1,[]],["estrelas","Estrelas",0,1,[]],
   ["desenho","Meu desenho",0,0,["Memória 1","Memória 2","Memória 3"]],["off","Desligado",0,0,[]]
 ].map(([id,nome,cor,vel,opcoes])=>({id,nome,cor:!!cor,vel:!!vel,opcoes}));
 const LATERAIS_DEMO = [["off","Desligado"],["fixo","Fixo"],["respiracao","Respiração"],["neon","Neon"],["onda","Onda"],["cobra","Cobra"]].map(([id,nome])=>({id,nome}));
-const GRUPOS = [["Contínuos",["fixo","respiracao","neon","onda","senoide","caleidoscopio","circulo","convergir","linha"]],
-                ["Partículas",["ondulacao","gotas","cobra","laser","brilhante","chuva","meteoro"]],
-                ["Ao digitar",["reativo","reativo_inv"]],["Feitos aqui",["aurora"]],["Outros",["desenho","off"]]];
+const GRUPOS = [
+  ["Oficiais", "Vêm de fábrica e rodam direto no teclado",
+   ["fixo","respiracao","neon","onda","senoide","caleidoscopio","circulo","convergir","linha",
+    "ondulacao","gotas","cobra","laser","brilhante","chuva","meteoro","reativo","reativo_inv","desenho","off"]],
+  ["Experimentais", "Criados aqui e gravados no teclado; podem variar conforme o firmware",
+   ["aurora","plasma","fogo","mare","tempestade","digital","scanner","radar","batimento","galaxia","diagonal","estrelas"], true]
+];
 const CORES = ["#ffffff","#ff2d55","#ff7a00","#ffd400","#22d65a","#00d4d4","#2f6bff","#8a3dff","#ff3df2"];
 
 /* layout do K86: [rótulo, índice do LED, largura, código da tecla, classe] — null = espaço */
@@ -481,6 +508,7 @@ const COD_T = {aurora:66,off:0,fixo:1,respiracao:2,neon:3,onda:4,ondulacao:5,got
                linha:12,desenho:13,laser:14,circulo:15,brilhante:16,chuva:17,meteoro:18,reativo_inv:19};
 const COD_L = {off:0,fixo:1,respiracao:2,neon:3,onda:4,cobra:5};
 const ID_T = Object.fromEntries(Object.entries(COD_T).map(([k,v])=>[v,k]));
+try { const u = localStorage.getItem("k86-exp-ultimo"); ID_T[66] = u && /^[a-z_]+$/.test(u) ? u : "aurora"; } catch(e){ ID_T[66] = "aurora"; }
 const ID_L = Object.fromEntries(Object.entries(COD_L).map(([k,v])=>[v,k]));
 const BRANCO_FW = [0xFA,0xFF,0xFA];
 const TELA_W = 240, TELA_H = 135, TELA_MAX = 60;
@@ -612,8 +640,11 @@ async function enviarAnimacao(quadros, intervalo, brilho){
   for (let f = 0; f < n; f++){
     for (let c = 0; c < 7; c++){
       const b = new Uint8Array(64); b.set([0x19, c, f, n, intervalo, 0, 0]); ck(b, 7);
-      b.set(quadros[f].subarray(c*56, c*56 + 56), 8); await mandar(b, 1);
+      b.set(quadros[f].subarray(c*56, c*56 + 56), 8);
+      await mandar(b, 4);                      // pausa curta para o teclado não perder pedaços do quadro
     }
+    await dormir(12);
+    HIDK.anim = (f + 1) / n;
   }
   await dormir(300);
   await pacoteLuz(0x07, 66, velParaByte(2), lim(brilho, 0, 4), 0, 7, [0,0,0]);
@@ -796,7 +827,7 @@ function corTecla(S, k, t){
       const pos = (row + ord)/6, head = (t*sp*.08)%1;
       const d = ((head - pos)%1+1)%1; a = d < .12 ? .1 + .9*(1 - d/.12) : .04; break; }
     case "desenho": { const h = desenhos[S.opcao||0][k.i] || "#000000"; c = hexRgb(h); a = h==="#000000" ? 0 : 1; break; }
-    case "aurora": { const dur = AUR_QUADROS * AUR_INTERVALO[S.velocidade ?? 2] / 1000; [c, a] = auroraCor(k, (t / dur) % 1, AUR.paleta); break; }
+    default: if (ehExp(S.efeito)){ const dur = AUR_QUADROS * AUR_INTERVALO[S.velocidade ?? 2] / 100; [c, a] = corExp(S.efeito, k, (t / dur) % 1); }
   }
   if (S.efeito === "ondulacao" || S.efeito === "reativo" || S.efeito === "reativo_inv"){
     let v = 0;
@@ -812,29 +843,91 @@ function corTecla(S, k, t){
   return [c, a*bri];
 }
 
-/* ======================================================= aurora */
+/* ======================================================= efeitos experimentais
+   Cada efeito é uma função (tecla, fase, cores) -> [rgb, intensidade], com fase de 0 a 1.
+   Tudo que depende da fase usa ciclos inteiros, então o último quadro emenda no primeiro. */
 const PALETAS = {
-  boreal:  {nome:"Boreal",     cores:["#00ff9c","#00d0ff","#6a3dff","#00ff9c"]},
-  oceano:  {nome:"Oceano",     cores:["#003cff","#00c8ff","#00ffd5","#003cff"]},
-  por_sol: {nome:"Pôr do sol", cores:["#ff2d55","#ff7a00","#ffc400","#ff2d55"]},
-  floresta:{nome:"Floresta",   cores:["#16ff3c","#a8ff00","#00ffa2","#16ff3c"]},
-  sonho:   {nome:"Sonho",      cores:["#ff3df2","#8a3dff","#2f6bff","#ff3df2"]}
+  boreal:    {nome:"Boreal",     cores:["#00ff9c","#00d0ff","#6a3dff","#00ff9c"]},
+  oceano:    {nome:"Oceano",     cores:["#003cff","#00c8ff","#00ffd5","#003cff"]},
+  por_sol:   {nome:"Pôr do sol", cores:["#ff2d55","#ff7a00","#ffc400","#ff2d55"]},
+  floresta:  {nome:"Floresta",   cores:["#16ff3c","#a8ff00","#00ffa2","#16ff3c"]},
+  sonho:     {nome:"Sonho",      cores:["#ff3df2","#8a3dff","#2f6bff","#ff3df2"]},
+  fogo:      {nome:"Fogo",       cores:["#ff1000","#ff6a00","#ffd23a","#ff1000"]},
+  digital:   {nome:"Digital",    cores:["#004d12","#22ff4c","#c8ffd0","#004d12"]},
+  tempestade:{nome:"Tempestade", cores:["#0b1f8a","#cfe0ff","#3a5cff","#0b1f8a"]},
+  espectro:  {nome:"Espectro",   cores:["#ff0040","#ffb000","#40ff40","#00c8ff","#8040ff","#ff0040"]}
 };
-let AUR = {paleta:"boreal"};
-try { const a = JSON.parse(localStorage.getItem("k86-aurora")); if (a && PALETAS[a.paleta]) AUR = a; } catch(e){}
+const ehHex = v => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v);
+let AUR = {paleta:"boreal", c1:"#00ff9c", c2:"#8a3dff", pal:{}};
+try { const a = JSON.parse(localStorage.getItem("k86-aurora")) || {};
+  if (ehHex(a.c1)) AUR.c1 = a.c1; if (ehHex(a.c2)) AUR.c2 = a.c2;
+  if (a.pal && typeof a.pal === "object") AUR.pal = a.pal; else if (a.paleta) AUR.pal = {aurora:a.paleta}; } catch(e){}
+PALETAS.custom = { nome:"Personalizada", get cores(){ return [AUR.c1, AUR.c2, AUR.c1]; } };   // volta à cor 1 para o loop não ter emenda
+function salvarAurora(){ try { localStorage.setItem("k86-aurora", JSON.stringify({c1:AUR.c1, c2:AUR.c2, pal:AUR.pal})); } catch(e){} }
 function amostraPaleta(cores, x){ x = ((x % 1) + 1) % 1; const n = cores.length - 1, i = Math.min(n - 1, Math.floor(x * n)), f = x * n - i;
   return mix(hexRgb(cores[i]), hexRgb(cores[i+1]), f*f*(3 - 2*f)); }
-/* fase vai de 0 a 1 e o resultado se repete exatamente: dá para gravar em loop sem emenda */
-function auroraCor(k, fase, paleta){
-  const P = Math.PI*2, x = k.x - KX[0], y = k.y - KY[0];
-  const cortina = .5 + .5*Math.sin(x*.42 + Math.sin(y*.9 + fase*P)*1.4 - fase*P);
-  const brilho = Math.pow(.5 + .5*Math.sin(x*.23 - y*.55 + fase*P*2), 1.6);
-  const tom = x/22 + .18*Math.sin(y*.7 + fase*P) + fase;
-  const c = amostraPaleta(PALETAS[paleta].cores, tom);
-  return [c, .12 + .88*clamp01(.35*cortina + .75*brilho)];
-}
-const AUR_QUADROS = 72;
-const AUR_INTERVALO = [90, 70, 50, 35, 25];   // por nível de velocidade
+const P2 = Math.PI*2;
+const sorte = (i, s = 0) => { const v = Math.sin(i*12.9898 + s*78.233)*43758.5453; return v - Math.floor(v); };
+const geo = k => { const x = k.x - KX[0], y = k.y - KY[0], W = KX[1]-KX[0], H = KY[1]-KY[0];
+  return {x, y, nx:x/W, ny:y/H, cx:x - W/2, cy:(y - H/2)*2.4}; };
+const hexcor = h => hexRgb(h);
+
+const EXP = {
+  aurora: {nome:"Aurora", paleta:"boreal", fn(k, f, C){ const {x, y} = geo(k);
+    const cortina = .5 + .5*Math.sin(x*.42 + Math.sin(y*.9 + f*P2)*1.4 - f*P2);
+    const brilho = Math.pow(.5 + .5*Math.sin(x*.23 - y*.55 + f*P2*2), 1.6);
+    return [amostraPaleta(C, x/22 + .18*Math.sin(y*.7 + f*P2) + f), .12 + .88*clamp01(.35*cortina + .75*brilho)]; }},
+  plasma: {nome:"Plasma", paleta:"sonho", fn(k, f, C){ const {x, y, cx, cy} = geo(k);
+    const v = Math.sin(x*.55 + f*P2) + Math.sin(y*.9 - f*P2*2) + Math.sin((x + y)*.35 + f*P2) + Math.sin(Math.hypot(cx, cy)*.6 - f*P2*2);
+    return [amostraPaleta(C, v/8 + .5 + f), .8 + .2*Math.sin(v*1.5)]; }},
+  fogo: {nome:"Fogo", paleta:"fogo", fn(k, f, C){ const {x, ny} = geo(k), col = Math.round(x*1.1);
+    const altura = .5 + .22*Math.sin(col*1.7 + f*P2*3) + .14*Math.sin(col*.6 - f*P2*5);
+    const calor = clamp01((ny - (1 - altura)) / altura) * (.75 + .25*Math.sin(sorte(k.i)*P2 + f*P2*4));
+    return [amostraPaleta(C, .05 + calor*.6), .06 + .94*calor]; }},
+  mare: {nome:"Maré", paleta:"oceano", fn(k, f, C){ const {x, y} = geo(k);
+    const w = Math.sin(x*.6 - f*P2*2 + Math.sin(y*1.2 + f*P2)*.8), crista = Math.pow((w + 1)/2, 3);
+    const c = crista > .85 ? mix(amostraPaleta(C, .45), [255,255,255], (crista - .85)/.15*.7) : amostraPaleta(C, .05 + crista*.4);
+    return [c, .25 + .75*crista]; }},
+  tempestade: {nome:"Tempestade", paleta:"tempestade", fn(k, f, C){ const {x, nx, ny} = geo(k);
+    const nuvem = .18 + .1*Math.sin(x*.5 + f*P2) + .06*Math.sin(x*1.3 - f*P2*2);
+    const raios = [[.30,.012,.25,1],[.335,.01,.3,.6],[.72,.015,.7,1]];
+    let flash = 0;
+    for (const [t0, w, px, forca] of raios){ const d = ((f - t0 + 1.5) % 1) - .5;
+      flash = Math.max(flash, forca*Math.exp(-((d/w)**2)) * Math.exp(-(((nx - px)/(.18 + ny*.25))**2))); }
+    return [mix(hexcor(C[0]), hexcor(C[1]), clamp01(flash)), clamp01(nuvem + flash)]; }},
+  digital: {nome:"Chuva digital", paleta:"digital", fn(k, f, C){ const {x, ny} = geo(k), col = Math.round(x*1.1);
+    const vel = 1 + Math.floor(sorte(col, 3)*3), pos = ((f*vel + sorte(col, 7)) % 1)*1.5 - .25, d = pos - ny;
+    if (d < 0 || d > .55) return [hexcor(C[0]), .05];
+    const v = Math.pow(1 - d/.55, 2);
+    return [d < .08 ? mix(hexcor(C[1]), hexcor(C[2]), .8) : hexcor(C[1]), .05 + .95*v]; }},
+  scanner: {nome:"Scanner", paleta:"por_sol", fn(k, f, C){ const {nx} = geo(k);
+    const pos = .5 - .5*Math.cos(f*P2), sn = Math.sin(f*P2), d = (nx - pos)*(sn >= 0 ? -1 : 1);
+    const rastro = d >= 0 ? Math.exp(-((d/.16)**2)) : Math.exp(-((d/.035)**2)), ponto = Math.exp(-(((nx - pos)/.045)**2));
+    const v = ponto + (rastro - ponto)*Math.min(1, Math.abs(sn)*3);   // nas pontas o rastro some: a volta não dá salto
+    return [hexcor(C[0]), .04 + .96*v]; }},
+  radar: {nome:"Radar", paleta:"floresta", fn(k, f, C){ const {cx, cy} = geo(k);
+    const ang = (Math.atan2(cy, cx)/P2 + 1) % 1, d = ((f - ang) % 1 + 1) % 1;
+    return [amostraPaleta(C, d*.5), d < .35 ? .06 + .94*Math.pow(1 - d/.35, 2) : .06]; }},
+  batimento: {nome:"Batimento", paleta:"por_sol", fn(k, f, C){ const {cx, cy} = geo(k), r = Math.hypot(cx/9, cy/6);
+    const g = f - r*.06, pulso = t => Math.exp(-((((g - t + 1.5) % 1 - .5)/.035)**2));
+    return [mix(hexcor(C[0]), hexcor(C[1]), clamp01(r)), .05 + .95*clamp01(pulso(.1) + .7*pulso(.28))]; }},
+  galaxia: {nome:"Galáxia", paleta:"sonho", fn(k, f, C){ const {cx, cy} = geo(k);
+    const ang = Math.atan2(cy, cx)/P2, r = Math.hypot(cx, cy)/10;
+    const bracos = .5 + .5*Math.cos(P2*(ang*2 + r*1.5 - f));
+    return [amostraPaleta(C, ang + r*.8 - f), .12 + .88*bracos*bracos]; }},
+  diagonal: {nome:"Arco-íris diagonal", paleta:"espectro", fn(k, f, C){ const {nx, ny} = geo(k);
+    return [amostraPaleta(C, nx*.7 + ny*.3 - f), 1]; }},
+  estrelas: {nome:"Estrelas", paleta:"boreal", fn(k, f, C){ const h = sorte(k.i, 11), n = 1 + Math.floor(sorte(k.i, 5)*3);
+    const v = Math.pow(.5 + .5*Math.sin(P2*(f*n + h)), 10);
+    return [mix(hexcor(C[0]), hexcor(C[1]), v), .1 + .9*v]; }}
+};
+const ehExp = id => !!EXP[id];
+const paletaDe = id => { const p = AUR.pal[id]; return (p && (PALETAS[p])) ? p : (EXP[id] ? EXP[id].paleta : "boreal"); };
+function corExp(id, k, fase){ return EXP[id].fn(k, fase, PALETAS[paletaDe(id)].cores); }
+function auroraCor(k, fase, paleta){ return EXP.aurora.fn(k, fase, PALETAS[paleta].cores); }   // compatibilidade
+// o teclado conta o intervalo entre quadros em centésimos de segundo (1 = 10 ms)
+const AUR_QUADROS = 120;
+const AUR_INTERVALO = [6, 5, 4, 3, 2];   // por nível de velocidade: volta completa de 7,2 s a 2,4 s
 
 /* mini prévia de cada efeito (faixa de 16 LEDs) */
 const FAKE = Array.from({length:16},(_,n)=>({i:1000+n, x:KX[0]+(KX[1]-KX[0])*n/15, y:(KY[0]+KY[1])/2 + Math.sin(n)*.01}));
@@ -942,9 +1035,9 @@ function efeitoAtual(){ return INFO.efeitos.find(e=>e.id===T.efeito) || INFO.efe
 function renderFx(){
   const ids = new Set(INFO.efeitos.map(e=>e.id)); let html = "";
   const usados = new Set();
-  for (const [nome, lista] of GRUPOS){
+  for (const [nome, nota, lista, exp] of GRUPOS){
     const itens = lista.filter(id=>ids.has(id)); if (!itens.length) continue;
-    html += `<div class="fx-group">${nome}</div>`;
+    html += `<div class="fx-cat ${exp ? "exp" : ""}"><b>${nome}</b><span>${nota}</span></div>`;
     for (const id of itens){ usados.add(id); const e = INFO.efeitos.find(x=>x.id===id);
       html += `<button data-e="${id}" class="${id===T.efeito?"on":""}"><span>${e.nome}</span><canvas width="16" height="1" data-id="${id}"></canvas></button>`; }
   }
@@ -964,10 +1057,14 @@ function renderT(){
   $("#t-bri-v").textContent = ["Mínimo","Baixo","Médio","Alto","Máximo"][T.brilho];
   $("#t-vel-v").textContent = ["Bem lenta","Lenta","Normal","Rápida","Muito rápida"][T.velocidade];
   $("#t-bri-b").classList.toggle("dim", T.efeito==="off"); $("#t-vel-b").classList.toggle("dim", !ef.vel);
-  const aur = T.efeito === "aurora";
+  const aur = ehExp(T.efeito); if (aur) AUR.paleta = paletaDe(T.efeito);
   $("#t-aur").hidden = !aur; $("#t-cor").hidden = aur;
-  if (aur) $("#aur-pal").innerHTML = Object.entries(PALETAS).map(([id, p]) =>
-    `<button data-p="${id}" class="${id===AUR.paleta?"on":""}"><i style="display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px;background:linear-gradient(90deg,${p.cores.slice(0,3).join(",")})"></i>${p.nome}</button>`).join("");
+  if (aur){
+    $("#aur-pal").innerHTML = Object.entries(PALETAS).map(([id, p]) =>
+      `<button data-p="${id}" class="${id===AUR.paleta?"on":""}"><i style="display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px;background:linear-gradient(90deg,${p.cores.slice(0,3).join(",")})"></i>${p.nome}</button>`).join("");
+    $("#aur-cores").hidden = AUR.paleta !== "custom";
+    $$("#aur-cores .aur-c").forEach(b => { const c = AUR["c" + b.dataset.n]; b.style.setProperty("--s", c); b.querySelector("small").textContent = c.toUpperCase(); });
+  }
   pintarAcento(); cabecalho();
 }
 function renderL(){
@@ -994,7 +1091,7 @@ function miniSlots(){
 }
 function pintarAcento(){
   const src = tab==="laterais" ? L : tab==="desenho" ? {cor:pincel} : T;
-  const c = (tab==="teclado" && T.efeito==="aurora") ? PALETAS[AUR.paleta].cores[1] :
+  const c = (tab==="teclado" && ehExp(T.efeito)) ? PALETAS[paletaDe(T.efeito)].cores[1] :
     (src.arcoiris || src.efeito==="neon") ? "#7a5cff" : (src.cor === "#ffffff" ? "#9fb6ff" : src.cor);
   document.documentElement.style.setProperty("--c", c);
 }
@@ -1011,33 +1108,48 @@ function cabecalho(){
 }
 
 const sendT = msg => { renderT();
-  if (T.efeito === "aurora"){ if (msg) toast("Prévia da Aurora: clique em Gravar para mandar ao teclado"); return; }
+  if (ehExp(T.efeito)){ if (msg) toast(`Prévia de ${EXP[T.efeito].nome}: clique em Gravar para mandar ao teclado`); return; }
   enviar("/api/teclado", T, msg); };
-function quadrosAurora(){
+function quadrosAurora(id = T.efeito){
   const out = [];
   for (let f = 0; f < AUR_QUADROS; f++){
     const q = new Uint8Array(384);
-    for (const k of KEYS){ if (k.knob) continue; const [c, a] = auroraCor(k, f / AUR_QUADROS, AUR.paleta); q.set(mul(c, Math.min(1, a)).map(v => Math.round(v)), k.i*3); }
+    for (const k of KEYS){ if (k.knob) continue; const [c, a] = corExp(ehExp(id) ? id : "aurora", k, f / AUR_QUADROS);
+      q.set(mul(c, Math.min(1, a)).map(v => Math.max(1, Math.round(v))), k.i*3); }
     out.push(q);
   }
   return out;
 }
-$("#aur-pal").onclick = e => { const b = e.target.closest("button"); if (!b) return; AUR.paleta = b.dataset.p;
-  try { localStorage.setItem("k86-aurora", JSON.stringify(AUR)); } catch(_){} renderT(); };
+$("#aur-pal").onclick = e => { const b = e.target.closest("button"); if (!b) return; AUR.paleta = b.dataset.p; AUR.pal[T.efeito] = b.dataset.p; salvarAurora(); renderT(); };
+$("#aur-cores").addEventListener("click", e => {
+  if (e.target.closest("#aur-troca")){ [AUR.c1, AUR.c2] = [AUR.c2, AUR.c1]; salvarAurora(); renderT(); return; }
+  const b = e.target.closest(".aur-c"); if (!b) return;
+  const chave = "c" + b.dataset.n, antes = AUR[chave];
+  const mostrar = c => { b.style.setProperty("--s", c); b.querySelector("small").textContent = c.toUpperCase(); pintarAcento(); };
+  abrirSeletor(b, antes, {
+    previa: c => { AUR[chave] = c; mostrar(c); },                       // a prévia do teclado muda junto
+    aplicar: c => { AUR[chave] = c; salvarAurora(); renderT(); toast(`Cor ${b.dataset.n} escolhida`); },
+    cancelar: () => { AUR[chave] = antes; mostrar(antes); } });
+});
 $("#aur-anim").onclick = async () => { const b = $("#aur-anim"); b.disabled = true; b.textContent = "Gravando…";
-  const r = await api("/api/animacao", {quadros:quadrosAurora(), intervalo:AUR_INTERVALO[T.velocidade], brilho:T.brilho}); status(r);
+  HIDK.anim = 0; const vigia = setInterval(() => { b.textContent = `Gravando ${Math.round((HIDK.anim||0)*100)}%`; }, 200);
+  const id = T.efeito, nome = EXP[id].nome;
+  const r = await api("/api/animacao", {quadros:quadrosAurora(id), intervalo:AUR_INTERVALO[T.velocidade], brilho:T.brilho}); status(r);
+  if (r.ok !== false && !r.semTeclado){ ID_T[66] = id; try { localStorage.setItem("k86-exp-ultimo", id); } catch(_){} }
+  clearInterval(vigia);
   b.disabled = false; b.textContent = "Gravar animação no teclado";
-  $("#aur-status").textContent = r.semTeclado ? "Conecte o teclado para gravar a Aurora." :
+  $("#aur-status").textContent = r.semTeclado ? `Conecte o teclado para gravar ${nome}.` :
     r.ok === false ? "A gravação não terminou. Clique em Conectar teclado e tente de novo." :
-    `Aurora ${PALETAS[AUR.paleta].nome} gravada (${AUR_QUADROS} quadros). Se o teclado não mudou, use "Gravar como desenho fixo".`;
-  if (r.ok !== false && !r.semTeclado) toast("Aurora gravada no teclado"); };
+    `${nome} com a paleta ${PALETAS[paletaDe(id)].nome} gravado no teclado (${AUR_QUADROS} quadros).`;
+  if (r.ok !== false && !r.semTeclado) toast(`${nome} gravado no teclado`); };
 $("#aur-fixa").onclick = async () => {
   const d = Array(128).fill("#000000");
-  for (const k of KEYS){ if (k.knob) continue; const [c, a] = auroraCor(k, .15, AUR.paleta); d[k.i] = rgbHex(mul(c, Math.min(1, .35 + a))); }
+  const id = ehExp(T.efeito) ? T.efeito : "aurora";
+  for (const k of KEYS){ if (k.knob) continue; const [c, a] = corExp(id, k, .15); d[k.i] = rgbHex(mul(c, Math.min(1, .35 + a))); }
   desenhos[2] = d; salvarDesenhos(); miniSlots();
   const r = await api("/api/desenho", {memoria:2, cores:d, brilho:T.brilho}); status(r);
-  if (r.semTeclado){ $("#aur-status").textContent = "Desenho da Aurora guardado na memória 3. Conecte o teclado para gravar nele."; return; }
-  if (r.ok !== false){ T.efeito = "desenho"; T.opcao = 2; renderT(); toast("Aurora gravada como desenho na memória 3"); } };
+  if (r.semTeclado){ $("#aur-status").textContent = `Desenho de ${EXP[id].nome} guardado na memória 3. Conecte o teclado para gravar nele.`; return; }
+  if (r.ok !== false){ T.efeito = "desenho"; T.opcao = 2; renderT(); toast(`${EXP[id].nome} gravado como desenho na memória 3`); } };
 const sendL = msg => { renderL(); enviar("/api/laterais", L, msg); };
 
 $("#fx").addEventListener("click", e => { const b = e.target.closest("button[data-e]"); if (!b) return;
@@ -1209,7 +1321,7 @@ function tocar(){ clearInterval(anim); if (!quadros.length) return; let i = 0; c
 function info(t){ $("#tinfo").textContent = t; }
 function prontos(){ $("#tsend").disabled = !quadros.length; tocar(); cabecalho();
   info(quadros.length === 1 ? "Imagem pronta para enviar." : `${quadros.length} quadros prontos para enviar.` + (quadros.length >= MAXQ() ? ` Esse é o limite da memória da tela.` : "")); }
-function setInt(v){ const el = $("#tint"); el.value = Math.max(10, Math.min(255, Math.round(v/5)*5)); $("#tint-t").textContent = el.value; setRange(el); }
+function setInt(ms){ const el = $("#tint"); el.value = Math.max(20, Math.min(1000, Math.round(ms/10)*10)); $("#tint-t").textContent = el.value + " ms"; setRange(el); }
 async function abrir(f){ arquivo = f; quadros = []; clearInterval(anim); $("#vsec").hidden = true; $("#tsend").disabled = true;
   if (f.type.startsWith("video/")) return abrirVideo(f);
   if (f.type === "image/gif" && "ImageDecoder" in window){ try{
@@ -1246,10 +1358,10 @@ $("#fit").onclick = e => { const b = e.target.closest("button"); if (!b) return;
   if (arquivo && !arquivo.type.startsWith("video/")) abrir(arquivo); else if (video && quadros.length) gerarVideo(); else if (video) desenha(video, video.videoWidth, video.videoHeight); };
 $("#vfps").onclick = e => { const b = e.target.closest("button"); if (!b) return; $$("#vfps button").forEach(x => x.classList.toggle("on", x === b)); rotVideo(); };
 $("#vini").oninput = () => { rotVideo(); if (video && !gerando) video.currentTime = +$("#vini").value; }; $("#vdur").oninput = rotVideo; $("#vgo").onclick = gerarVideo;
-$("#tint").oninput = () => { $("#tint-t").textContent = $("#tint").value; setRange($("#tint")); tocar(); }; setInt(50);
+$("#tint").oninput = () => { $("#tint-t").textContent = $("#tint").value + " ms"; setRange($("#tint")); tocar(); }; setInt(100);
 $("#relogio").onclick = async () => { const r = await api("/api/relogio", {}); status(r); if (r.ok !== false){ info("Relógio da tela acertado com a hora do PC."); toast("Relógio acertado"); } };
 $("#tsend").onclick = async () => { if (!quadros.length) return; const b = $("#tsend"); b.disabled = true; info("Preparando o envio…");
-  const r = await api("/api/tela", {intervalo:+$("#tint").value, quadrosBin:quadros.map(rgb565)}); status(r);
+  const r = await api("/api/tela", {intervalo:Math.round(+$("#tint").value / 10), quadrosBin:quadros.map(rgb565)}); status(r);
   if (r.ok === false){ info(r.semTeclado ? "Conecte o teclado para enviar para a tela." : (r.erro || "O envio não começou. Clique em Conectar teclado e tente de novo.")); b.disabled = false; return; }
   $("#prog").hidden = false; const t0e = Date.now();
   const loop = setInterval(async () => { const p = await api("/api/tela/progresso");
