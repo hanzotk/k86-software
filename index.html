@@ -1411,7 +1411,12 @@ $("#rec").onclick = () => conectar(true);
   await conectar(false);
   requestAnimationFrame(frame);
 })();
-if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
+if ("serviceWorker" in navigator && location.protocol === "https:"){
+  navigator.serviceWorker.register("sw.js", {updateViaCache:"none"}).then(reg => reg.update()).catch(() => {});
+  // quando uma versão nova do site assume, recarrega uma vez para mostrar a atualização
+  let recarregou = false; const tinhaVersao = !!navigator.serviceWorker.controller;   // na primeira visita não recarrega
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (tinhaVersao && !recarregou){ recarregou = true; location.reload(); } });
+}
 </script>
 </body>
 </html>
