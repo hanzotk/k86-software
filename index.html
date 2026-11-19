@@ -454,8 +454,6 @@ input[type=range]:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
       <input type="range" id="tint" min="20" max="1000" step="10" value="100">
       <div class="status-line" id="tinfo">Escolha um arquivo para ver a prévia.</div>
       <div class="progress" id="prog" hidden><i id="progbar"></i></div>
-      <label class="toggle simples"><input type="checkbox" id="tlimpar" checked><i></i>Apagar a tela antes de enviar</label>
-      <p class="hint" style="margin-top:6px">Evita que o arquivo novo se misture com o antigo. Leva cerca de 1 minuto a mais.</p>
       <div class="row-actions">
         <button class="btn ink" id="tsend" disabled>Enviar para a tela</button>
         <button class="btn" id="relogio">Acertar relógio</button>
@@ -463,7 +461,8 @@ input[type=range]:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
       <p class="hint">Não desconecte o teclado nem feche o site enquanto a barra estiver andando.</p>
       <div class="block" style="margin-top:22px;padding-top:18px;border-top:1px solid var(--line)">
         <div class="h"><h2>Memória da tela</h2></div>
-        <p class="hint" style="margin-top:0">Apaga todas as imagens e GIFs guardados na tela do teclado. Use quando a tela ficar alternando entre um GIF novo e um antigo.</p>
+        <p class="hint" style="margin-top:0">Apaga todas as imagens e GIFs guardados na tela do teclado. Use quando a tela ficar alternando entre um GIF novo e um antigo.
+          Depois de limpar, espere a porcentagem na tela do teclado chegar ao fim antes de enviar um arquivo novo.</p>
         <div class="row-actions"><button class="btn perigo" id="tclear">Limpar tela</button></div>
       </div>
     </div>
@@ -652,12 +651,13 @@ async function enviarTela(quadros, intervalo){
     pronto = r[0] === 0xA5 && r[1] === 1; if (!pronto) await dormir(150);
   }
   if (!pronto) throw new Error("a tela não respondeu");
+  await dormir(100);                                     // o driver oficial também espera antes dos dados
   const blocos = Math.ceil(tam / 56), total = n * blocos; let feito = 0;
   for (let q = 0; q < n; q++){
     for (let bl = 0; bl < blocos; bl++){
       const parte = quadros[q].subarray(bl*56, bl*56 + 56), b = new Uint8Array(64);
       b.set([0x25, q, n, intervalo, bl & 255, bl >> 8, parte.length]); ck(b, 7); b.set(parte, 8);
-      await mandar(b, 0); feito++;
+      await mandar(b, 1); feito++;
       if (feito % 40 === 0) HIDK.tela.progresso = feito / total;
     }
   }
@@ -1422,15 +1422,15 @@ function acompanharTela(){
       clearInterval(loop); travarTela(false); setTimeout(() => $("#prog").hidden = true, 1500);
       if (p.erro) info(p.erro);
       else if (p.comEnvio){ info("Enviado. A tela do teclado já está mostrando o arquivo."); toast("Enviado para a tela"); }
-      else { info("Tela limpa. Agora é só enviar uma imagem ou GIF novo."); toast("Tela limpa"); }
+      else { info("Limpeza pedida. Se a tela do teclado mostrar uma porcentagem, espere ela terminar antes de enviar um arquivo novo."); toast("Limpeza da tela pedida"); }
     } }, 400);
 }
 $("#tsend").onclick = async () => { if (!quadros.length) return; travarTela(true); info("Preparando o envio…");
-  const r = await api("/api/tela", {intervalo:Math.round(+$("#tint").value / 10), quadrosBin:quadros.map(rgb565), limparAntes:$("#tlimpar").checked}); status(r);
+  const r = await api("/api/tela", {intervalo:Math.round(+$("#tint").value / 10), quadrosBin:quadros.map(rgb565)}); status(r);
   if (r.ok === false){ info(r.semTeclado ? "Conecte o teclado para enviar para a tela." : (r.erro || "O envio não começou. Clique em Conectar teclado e tente de novo.")); travarTela(false); return; }
   acompanharTela(); };
 $("#tclear").onclick = async () => {
-  if (!await confirmar("Limpar a tela do teclado?", "Todas as imagens e GIFs guardados na tela serão apagados. Isso não pode ser desfeito e leva cerca de 1 minuto.", "Limpar tela")) return;
+  if (!await confirmar("Limpar a tela do teclado?", "Todas as imagens e GIFs guardados na tela serão apagados. Isso não pode ser desfeito. Depois, espere a tela do teclado terminar de apagar antes de enviar um arquivo novo.", "Limpar tela")) return;
   travarTela(true); info("Pedindo ao teclado para apagar a tela…");
   const r = await api("/api/limpar-tela", {}); status(r);
   if (r.ok === false){ info(r.semTeclado ? "Conecte o teclado para limpar a tela." : (r.erro || "A limpeza não começou. Clique em Conectar teclado e tente de novo.")); travarTela(false); return; }
